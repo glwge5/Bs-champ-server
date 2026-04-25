@@ -1,9 +1,47 @@
-const express = require('express');
-const cors = require('cors');
-const app = express();
+const http = require('http');
 
-app.use(cors());
-app.use(express.json());
+const server = http.createServer((req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Content-Type', 'application/json');
+
+    if (req.method === 'OPTIONS') {
+        res.statusCode = 204;
+        res.end();
+        return;
+    }
+
+    if (req.method === 'GET' && req.url === '/api/data') {
+        const data = JSON.stringify(appData);
+        res.statusCode = 200;
+        res.end(data);
+        return;
+    }
+
+    if (req.method === 'POST' && req.url === '/api/data') {
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            try {
+                const newData = JSON.parse(body);
+                appData = newData;
+                appData.lastUpdate = new Date().toISOString();
+                res.statusCode = 200;
+                res.end(JSON.stringify({ success: true }));
+            } catch(e) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: 'Invalid JSON' }));
+            }
+        });
+        return;
+    }
+
+    res.statusCode = 404;
+    res.end(JSON.stringify({ error: 'Not found' }));
+});
 
 let appData = {
     users: [{
@@ -18,17 +56,7 @@ let appData = {
     lastUpdate: new Date().toISOString()
 };
 
-app.get('/api/data', function(req, res) {
-    res.json(appData);
-});
-
-app.post('/api/data', function(req, res) {
-    appData = req.body;
-    appData.lastUpdate = new Date().toISOString();
-    res.json({ success: true });
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, function() {
+server.listen(PORT, () => {
     console.log('Server running on port ' + PORT);
 });
