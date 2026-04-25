@@ -18,17 +18,17 @@ let appData = {
     lastUpdate: new Date().toISOString()
 };
 
-app.get('/api/data', (req, res) => {
+app.get('/api/data', function(req, res) {
     res.json(appData);
 });
 
-app.post('/api/data', (req, res) => {
+app.post('/api/data', function(req, res) {
     appData = req.body;
     appData.lastUpdate = new Date().toISOString();
     res.json({ success: true });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, function() {
     console.log('Server running on port ' + PORT);
 });
